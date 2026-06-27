@@ -138,7 +138,7 @@ def dashboard_negozio(negozio_id: int, db: Session = Depends(get_db)):
 
 def genera_consigli_ai(nome_negozio, richieste_oggi, richieste_totali, top_prodotti):
     try:
-        client = anthropic.Anthropic(api_key="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")
+        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))o7Lpar2ZYraIsABk1IR5BaLZ4ZCSfZwuaBbERd9M2uTA9NjTTw0oRNlP-266o_0ATz5dI5k5DqJJH97b19rlMQ-lpcaawAA")
         
         top_str = ", ".join([f"{p.prodotto_nome} ({p.volte} richieste)" for p in top_prodotti]) if top_prodotti else "nessun dato ancora"
         
