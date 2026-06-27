@@ -11,6 +11,7 @@ from models.palline import Pallina
 from models.richieste_shop import RichiestaShop
 from datetime import datetime, date
 import anthropic
+import os
 
 router = APIRouter(
     prefix="/dashboard",
@@ -138,20 +139,17 @@ def dashboard_negozio(negozio_id: int, db: Session = Depends(get_db)):
 
 def genera_consigli_ai(nome_negozio, richieste_oggi, richieste_totali, top_prodotti):
     try:
-           client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))     
+        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
         top_str = ", ".join([f"{p.prodotto_nome} ({p.volte} richieste)" for p in top_prodotti]) if top_prodotti else "nessun dato ancora"
-        
         prompt = f"""Sei ACEAI, il consulente business per negozi di tennis di ACEAPP.
-        
-Analizza questi dati del negozio "{nome_negozio}" e dai 3 consigli pratici e specifici per aumentare le vendite:
 
+Analizza questi dati del negozio "{nome_negozio}" e dai 3 consigli pratici e specifici per aumentare le vendite:
 - Richieste oggi: {richieste_oggi}
 - Richieste totali ricevute: {richieste_totali}
 - Prodotti piu richiesti: {top_str}
 
 Dai consigli concreti su: stock da tenere, promozioni da fare, prodotti da esporre in vetrina.
 Rispondi in italiano con 3 punti brevi e pratici."""
-
         message = client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=400,
@@ -165,7 +163,7 @@ Rispondi in italiano con 3 punti brevi e pratici."""
 def statistiche_generali(db: Session = Depends(get_db)):
     negozi_attivi = db.query(Negozio).filter(Negozio.attivo == True).count()
     totale_richieste = db.query(RichiestaShop).count()
-    
+
     top_prodotti_globali = db.query(
         RichiestaShop.prodotto_nome,
         RichiestaShop.prodotto_tipo,
