@@ -1,0 +1,81 @@
+categoria,brand,modello,colore,materiale,dimensione,nota,image_url
+borsa,Wilson,Super Tour 15 Pack,rosso,poly,grande,pro player,https://www.tennis-warehouse.com/images/WST15-1.jpg
+borsa,Wilson,Team 6 Pack,nero,poly,media,leggera,https://www.tennis-warehouse.com/images/WTEAM6-1.jpg
+borsa,Babolat,RPM X12,blu,poly,grande,professionale,https://www.tennis-warehouse.com/images/BRPM12-1.jpg
+borsa,Babolat,Team Line 6R,bianco,poly,media,compatta,https://www.tennis-warehouse.com/images/BTL6-1.jpg
+borsa,Head,Tour Team 12R,nero,poly,grande,pro player,https://www.tennis-warehouse.com/images/HTT12-1.jpg
+borsa,Head,Pro X 9R,grigio,poly,media,rigida,https://www.tennis-warehouse.com/images/HPX9-1.jpg
+borsa,Yonex,Pro Series 12R,blu,poly,grande,ventilata,https://www.tennis-warehouse.com/images/YPS12-1.jpg
+borsa,Yonex,Team 6R,azzurro,poly,media,leggera,https://www.tennis-warehouse.com/images/YT6R-1.jpg
+borsa,Nike,Court Advantage Bag,nero,nylon,media,impermeabile,https://www.tennis-warehouse.com/images/NCAB-1.jpg
+borsa,Adidas,Control 12R,bianco,poly,grande,pro player,https://www.tennis-warehouse.com/images/AC12R-1.jpg
+asciugamano,Nike,Large Court Towel,bianco,cotone,grande,assorbente,https://www.tennis-warehouse.com/images/NLCT-1.jpg
+asciugamano,Nike,Small Court Towel,nero,cotone,medio,morbido,https://www.tennis-warehouse.com/images/NSCT-1.jpg
+asciugamano,Adidas,Performance Towel,blu,cotone,grande,rapida asciugatura,https://www.tennis-warehouse.com/images/APT-1.jpg
+asciugamano,Adidas,Club Towel,rosso,cotone,medio,leggero,https://www.tennis-warehouse.com/images/ACTWL-1.jpg
+asciugamano,Babolat,Match Towel,bianco,cotone,grande,pro player,https://www.tennis-warehouse.com/images/BMTWL-1.jpg
+asciugamano,Babolat,Team Towel,blu,cotone,medio,assorbente,https://www.tennis-warehouse.com/images/BTTWL-1.jpg
+asciugamano,Head,Club Towel,nero,cotone,grande,morbido,https://www.tennis-warehouse.com/images/HCTWL-1.jpg
+asciugamano,Head,Training Towel,grigio,cotone,medio,leggero,https://www.tennis-warehouse.com/images/HTTWL-1.jpg
+asciugamano,Yonex,Pro Towel,azzurro,cotone,grande,pro player,https://www.tennis-warehouse.com/images/YPTWL-1.jpg
+asciugamano,Yonex,Team Towel,verde,cotone,medio,assorbente,https://www.tennis-warehouse.com/images/YTTWL-1.jpg
+polsini,Nike,Swoosh Wristbands,bianco,cotone,small,pro player,https://www.tennis-warehouse.com/images/NSW-1.jpg
+polsini,Nike,Doublewide Wristbands,nero,cotone,large,assorbenti,https://www.tennis-warehouse.com/images/NDW-1.jpg
+polsini,Adidas,3-Stripes Wristbands,blu,cotone,small,traspiranti,https://www.tennis-warehouse.com/images/A3SW-1.jpg
+polsini,Adidas,Club Wristbands,rosso,cotone,large,leggeri,https://www.tennis-warehouse.com/images/ACW-1.jpg
+polsini,Babolat,Logo Wristbands,bianco,cotone,small,pro player,https://www.tennis-warehouse.com/images/BLW-1.jpg
+polsini,Babolat,Team Wristbands,blu,cotone,large,assorbenti,https://www.tennis-warehouse.com/images/BTW-1.jpg
+polsini,Head,Club Wristbands,nero,cotone,small,traspiranti,https://www.tennis-warehouse.com/images/HCW-1.jpg
+polsini,Head,Pro Wristbands,grigio,cotone,large,pro player,https://www.tennis-warehouse.com/images/HPW-1.jpg
+polsini,Yonex,AC489 Wristbands,azzurro,cotone,small,leggeri,https://www.tennis-warehouse.com/images/YAC489-1.jpg
+polsini,Yonex,AC488 Wristbands,verde,cotone,large,assorbenti,https://www.tennis-warehouse.com/images/YAC488-1.jpg
+calzini,Nike,Court Crew Socks,bianco,cotone,large,pro player,https://www.tennis-warehouse.com/images/NCCS-1.jpg
+calzini,Nike,Everyday Cushioned,nero,cotone,medium,ammortizzati,https://www.tennis-warehouse.com/images/NECS-1.jpg
+calzini,Adidas,Performance Crew,blu,cotone,large,traspiranti,https://www.tennis-warehouse.com/images/APCS-1.jpg
+calzini,Adidas,Club Socks,rosso,cotone,medium,leggeri,https://www.tennis-warehouse.com/images/ACS-1.jpg
+calzini,Babolat,Pro 360 Socks,bianco,cotone,large,pro player,https://www.tennis-warehouse.com/images/BP360-1.jpg
+calzini,Babolat,Team Socks,blu,cotone,medium,ammortizzati,https://www.tennis-warehouse.com/images/BTS-1.jpg
+calzini,Head,Club Crew Socks,nero,cotone,large,traspiranti,https://www.tennis-warehouse.com/images/HCCS-1.jpg
+calzini,Head,Training Socks,grigio,cotone,medium,leggeri,https://www.tennis-warehouse.com/images/HTS-1.jpg
+calzini,Yonex,AC1201 Socks,azzurro,cotone,large,pro player,https://www.tennis-warehouse.com/images/Y1201-1.jpg
+calzini,Yonex,AC1202 Socks,verde,cotone,medium,ammortizzati,https://www.tennis-warehouse.com/images/Y1202-1.jpg
+cappellino,Nike,Aerobill Cap,bianco,poly,unica,traspirante,https://www.tennis-warehouse.com/images/NAC-1.jpg
+cappellino,Nike,Heritage Cap,nero,poly,unica,leggero,https://www.tennis-warehouse.com/images/NHC-1.jpg
+cappellino,Adidas,Club Cap,blu,poly,unica,pro player,https://www.tennis-warehouse.com/images/ACC-1.jpg
+cappellino,Adidas,Performance Visor,rosso,poly,unica,leggero,https://www.tennis-warehouse.com/images/APV-1.jpg
+cappellino,Babolat,Logo Cap,bianco,poly,unica,traspirante,https://www.tennis-warehouse.com/images/BLC-1.jpg
+cappellino,Babolat,Team Visor,blu,poly,unica,leggero,https://www.tennis-warehouse.com/images/BTV-1.jpg
+cappellino,Head,Club Cap,nero,poly,unica,pro player,https://www.tennis-warehouse.com/images/HCCAP-1.jpg
+cappellino,Head,Pro Visor,grigio,poly,unica,leggero,https://www.tennis-warehouse.com/images/HPV-1.jpg
+cappellino,Yonex,AC489 Cap,azzurro,poly,unica,traspirante,https://www.tennis-warehouse.com/images/YAC489C-1.jpg
+cappellino,Yonex,AC488 Visor,verde,poly,unica,leggero,https://www.tennis-warehouse.com/images/YAC488V-1.jpg
+antivibratore,Wilson,Pro Feel,rosso,silicone,small,pro player,https://www.tennis-warehouse.com/images/WPF-1.jpg
+antivibratore,Wilson,Shock Shield,nero,silicone,small,ammortizzato,https://www.tennis-warehouse.com/images/WSS-1.jpg
+antivibratore,Babolat,Custom Damp,blu,silicone,small,personalizzabile,https://www.tennis-warehouse.com/images/BCD-1.jpg
+antivibratore,Babolat,Loony Damp,bianco,silicone,small,morbido,https://www.tennis-warehouse.com/images/BLD-1.jpg
+antivibratore,Head,Smartsorb,grigio,silicone,small,pro player,https://www.tennis-warehouse.com/images/HSS-1.jpg
+antivibratore,Head,Dampener,nero,silicone,small,leggero,https://www.tennis-warehouse.com/images/HDAMP-1.jpg
+antivibratore,Yonex,Vibration Stopper,verde,silicone,small,pro player,https://www.tennis-warehouse.com/images/YVS-1.jpg
+antivibratore,Yonex,AC165EX,azzurro,silicone,small,ammortizzato,https://www.tennis-warehouse.com/images/Y165EX-1.jpg
+antivibratore,Nike,Court Dampener,bianco,silicone,small,leggero,https://www.tennis-warehouse.com/images/NCD-1.jpg
+antivibratore,Adidas,Performance Damp,rosso,silicone,small,pro player,https://www.tennis-warehouse.com/images/APD-1.jpg
+overgrip,Wilson,Pro Overgrip,bianco,poly,standard,pro player,https://www.tennis-warehouse.com/images/WPOG-1.jpg
+overgrip,Wilson,Pro Overgrip Sensation,nero,poly,standard,sottile,https://www.tennis-warehouse.com/images/WPOGS-1.jpg
+overgrip,Babolat,VS Original,blu,poly,standard,leggero,https://www.tennis-warehouse.com/images/BVSO-1.jpg
+overgrip,Babolat,Pro Tour,rosso,poly,standard,grippante,https://www.tennis-warehouse.com/images/BPT-1.jpg
+overgrip,Head,Prime Tour,bianco,poly,standard,pro player,https://www.tennis-warehouse.com/images/HPT-1.jpg
+overgrip,Head,Tacky Grip,nero,poly,standard,aderente,https://www.tennis-warehouse.com/images/HTG-1.jpg
+overgrip,Yonex,Super Grap,azzurro,poly,standard,top seller,https://www.tennis-warehouse.com/images/YSG-1.jpg
+overgrip,Yonex,Tacky Feel,verde,poly,standard,aderente,https://www.tennis-warehouse.com/images/YTF-1.jpg
+overgrip,Nike,Court Overgrip,bianco,poly,standard,leggero,https://www.tennis-warehouse.com/images/NCOG-1.jpg
+overgrip,Adidas,Performance Grip,nero,poly,standard,grippante,https://www.tennis-warehouse.com/images/APG-1.jpg
+grip,Wilson,Comfort Hybrid,bianco,poly,standard,ammortizzato,https://www.tennis-warehouse.com/images/WCHG-1.jpg
+grip,Wilson,Leather Grip,nero,pelle,standard,pro player,https://www.tennis-warehouse.com/images/WLG-1.jpg
+grip,Babolat,Leather Grip,blu,pelle,standard,rigido,https://www.tennis-warehouse.com/images/BLG-1.jpg
+grip,Babolat,Comfort Grip,rosso,poly,standard,morbido,https://www.tennis-warehouse.com/images/BCG-1.jpg
+grip,Head,Hydrosorb Pro,nero,poly,standard,pro player,https://www.tennis-warehouse.com/images/HHP-1.jpg
+grip,Head,Hydrosorb Comfort,grigio,poly,standard,ammortizzato,https://www.tennis-warehouse.com/images/HHC-1.jpg
+grip,Yonex,AC128EX,verde,poly,standard,aderente,https://www.tennis-warehouse.com/images/Y128EX-1.jpg
+grip,Yonex,AC126,azzurro,poly,standard,morbido,https://www.tennis-warehouse.com/images/Y126-1.jpg
+grip,Nike,Court Leather Grip,bianco,pelle,standard,rigido,https://www.tennis-warehouse.com/images/NCLG-1.jpg
+grip,Adidas,Performance Leather,nero,pelle,standard,pro player,https://www.tennis-warehouse.com/images/APLG-1.jpg
