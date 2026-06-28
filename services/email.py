@@ -6,7 +6,7 @@ from email.mime.multipart import MIMEMultipart
 BREVO_SMTP_KEY = os.getenv("BREVO_SMTP_KEY")
 SMTP_SERVER = "smtp-relay.brevo.com"
 SMTP_PORT = 587
-SMTP_USER = "robertoricone@gmail.com"
+SMTP_USER = "af7bb0001@smtp-brevo.com"
 
 def invia_email_benvenuto(nome: str, email: str):
     if not BREVO_SMTP_KEY:
