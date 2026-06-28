@@ -10,6 +10,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
 from database_models import get_db
+from services.email import invia_email_benvenuto
 from models.utenti import Utente
 
 router = APIRouter(
@@ -117,6 +118,7 @@ def registra_utente(dati: UtenteRegistra, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(utente)
 
+    invia_email_benvenuto(utente.nome, utente.email)
     access_token = crea_access_token({"sub": str(utente.id)})
 
     return {
