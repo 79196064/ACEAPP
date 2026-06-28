@@ -19,7 +19,7 @@ def invia_email_benvenuto(nome: str, email: str):
                     <h1 style="color: white; text-align: center;">ACEAPP TENNIS</h1>
                     <h2 style="color: white;">Ciao {nome}!</h2>
                     <p style="color: white; font-size: 16px;">
-                        Benvenuto in ACEAPP - la prima piattaforma tennis con intelligenza artificiale!
+                        Benvenuto in ACEAPP - la prima piattaforma tennis con algoritmo biometrico ACEAI!
                     </p>
                     <div style="text-align: center; margin-top: 30px;">
                         <a href="https://aceapp.it" style="background-color: #1A2E4C; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px;">
