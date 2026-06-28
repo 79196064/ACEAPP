@@ -51,9 +51,9 @@ def invia_email_benvenuto(nome: str, email: str):
             server.login(SMTP_USER, BREVO_SMTP_KEY)
             server.sendmail(SMTP_USER, email, msg.as_string())
 
-        print(f"Email benvenuto inviata a {email}")
+        
         return True
-
+print(f"✅ Email benvenuto inviata con successo a {email}")
     except Exception as e:
-        print(f"Errore invio email: {e}")
+        print(f"❌ Errore invio email a {email}: {str(e)}")
         return False
