@@ -18,7 +18,7 @@ def invia_email_benvenuto(nome: str, email: str):
                 <div style="max-width: 600px; margin: 0 auto; background-color: #1A2E4C; padding: 30px; border-radius: 10px;">
                     
                     <div style="text-align: center; margin-bottom: 20px;">
-                        <img src="https://i.imgur.com/PEck7c9.jpeg" 
+                        <img src="https://i.postimg.cc/dQRjwN4W/f6250d37-8939-4955-836c-7c09e4aee4ba.jpg" 
                              alt="ACEAPP Logo" 
                              style="width: 120px; height: 120px; border-radius: 50%;"
                              onerror="this.style.display='none'"/>
