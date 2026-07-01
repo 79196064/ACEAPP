@@ -16,14 +16,27 @@ from services.aceai import (
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
+# 🟢 Modello aggiornato con tutti i dati biometrici e le selezioni del Frontend di Lovable
 class MatchRequest(BaseModel):
     nome: str
     livello: str
     stile: str
     superficie: str
-    problema_fisico: str
+    problema_fisico: str  # Gestisce la selezione sul braccio/epicondilite
     obiettivo: str
     email: str = ""
+    
+    # Nuovi campi inseriti nelle schermate 1, 2 e 3
+    genere: Optional[str] = None           # Uomo / Donna / Bambino
+    sesso: Optional[str] = None            # Maschio / Femmina
+    altezza: Optional[int] = None          # es. 175
+    peso: Optional[int] = None             # es. 70
+    eta: Optional[int] = None              # es. 30
+    citta: Optional[str] = None            
+    taglia_tshirt: Optional[str] = None    
+    taglia_pantaloncini: Optional[str] = None
+    numero_scarpe: Optional[int] = None    
+    colore_preferito: Optional[str] = None 
     
     model_config = {"from_attributes": True}
 
@@ -53,10 +66,12 @@ async def consulenza_match(
     background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
+    # 1. Lettura tabelle DB
     racchette_db = db.query(Racchetta).all()
     corde_db = db.query(Corda).all()
     palline_db = db.query(Pallina).all()
 
+    # 2. Conversione DB → ACEAI
     racquets = [
         Racquet(
             brand=getattr(r, 'brand', 'Generic'),
@@ -87,26 +102,36 @@ async def consulenza_match(
         ) for b in palline_db
     ]
 
-    problema = dati.problema_fisico.lower()
-    obiettivo = dati.obiettivo.lower()
+    # 3. Normalizzazione difensiva delle risposte (Evita bug se cambiano le maiuscole)
+    problema = dati.problema_fisico.lower() if dati.problema_fisico else ""
+    obiettivo = dati.obiettivo.lower() if dati.obiettivo else ""
 
-    player = PlayerProfile(
-        level=dati.livello.lower(),
-        style=dati.stile.lower(),
-        surface=dati.superficie.lower(),
-        has_elbow_issues=(problema == "gomito"),
-        has_shoulder_issues=(problema == "spalla"),
-        has_wrist_issues=(problema == "polso"),
-        prefers_spin=(obiettivo == "spin"),
-        prefers_power=(obiettivo == "potenza"),
-        prefers_control=(obiettivo == "controllo")
+    # Controllo intelligente per l'epicondilite/problema braccio
+    ha_problemi_gomito = (
+        "gomito" in problema or 
+        "si" in problema or 
+        "epicondilite" in problema or 
+        "occasionalmente" in problema
     )
 
+    player = PlayerProfile(
+        level=dati.livello.lower() if dati.livello else "intermedio",
+        style=dati.stile.lower() if dati.stile else "tutto campo",
+        surface=dati.superficie.lower() if dati.superficie else "terra",
+        has_elbow_issues=ha_problemi_gomito,
+        has_shoulder_issues=("spalla" in problema),
+        has_wrist_issues=("polso" in problema),
+        prefers_spin=("spin" in obiettivo),
+        prefers_power=("potenza" in obiettivo),
+        prefers_control=("controllo" in obiettivo)
+    )
+
+    # 4. Generazione consulenza
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
     
+    # 5. Spedizione mail in background
     if dati.email and dati.email.strip():
         background_tasks.add_task(esegui_invio_email, dati.nome, dati.email, risposta)
 
     return risposta
- 
