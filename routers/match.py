@@ -1,12 +1,19 @@
 ﻿import os
+import logging
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, BackgroundTasks
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from services.aceai import genera_consulenza, PlayerProfile
-from services.aceai import Racquet, StringItem, BallItem
+from database_models import SessionLocal
+from models.racchette import Racchetta
+from models.corde import Corda
+from models.palline import Pallina
+from services.aceai import (
+    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem
+)
 
-
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
 class MatchRequest(BaseModel):
@@ -17,42 +24,56 @@ class MatchRequest(BaseModel):
     problema_fisico: str
     obiettivo: str
     email: str = ""
+    
     model_config = {"from_attributes": True}
 
-@router.post("/consulenza")
-def consulenza_match(dati: MatchRequest):
-    from models.racchette import Racchetta
-    from models.corde import Corda
-    from models.palline import Pallina
-    from database_models import SessionLocal
-
-
+def get_db():
     db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-    # 🔥 Lettura dati reali dal DB
+def esegui_invio_email(dati_nome: str, dati_email: str, risposta: dict):
+    try:
+        from services.email import invia_email_consulenza
+        invia_email_consulenza(
+            nome=dati_nome,
+            email=dati_email,
+            setup=risposta.get("setup", {}),
+            score=risposta.get("profilo", {}).get("score_profilo", 0),
+            spiegazione=risposta.get("spiegazione_aceai", "")
+        )
+    except Exception as e:
+        logger.error(f"Errore invio email consulenza: {str(e)}")
+
+@router.post("/consulenza")
+async def consulenza_match(
+    dati: MatchRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)
+):
     racchette_db = db.query(Racchetta).all()
     corde_db = db.query(Corda).all()
     palline_db = db.query(Pallina).all()
-    db.close()
 
-    # 🔥 Conversione DB → ACEAI
     racquets = [
         Racquet(
-            brand=r.brand,
-            model=r.modello,
-            stiffness_ra=65,
-            pattern="16x19",
-            profile_mm=23.0,
-            weight_g=300
+            brand=getattr(r, 'brand', 'Generic'),
+            model=getattr(r, 'modello', 'Generic'),
+            stiffness_ra=getattr(r, 'stiffness_ra', 65) or 65,
+            pattern=getattr(r, 'pattern', '16x19') or '16x19',
+            profile_mm=getattr(r, 'profile_mm', 23.0) or 23.0,
+            weight_g=getattr(r, 'weight_g', getattr(r, 'peso', 300)) or 300
         ) for r in racchette_db
     ]
 
     strings = [
         StringItem(
-            name=f"{c.brand} {c.model}" if hasattr(c, 'model') else str(c.brand),
+            name=f"{c.brand} {getattr(c, 'model', getattr(c, 'modello', ''))}".strip() if hasattr(c, 'brand') else "Generic",
             material=getattr(c, 'materiale', 'poly') or 'poly',
-            is_shaped=False,
-            stiffness_score=60
+            is_shaped=getattr(c, 'is_shaped', getattr(c, 'sagomata', False)) or False,
+            stiffness_score=getattr(c, 'stiffness_score', getattr(c, 'rigidezza', 60)) or 60
         ) for c in corde_db
     ]
 
@@ -62,36 +83,30 @@ def consulenza_match(dati: MatchRequest):
             modello=getattr(b, 'modello', 'US Open'),
             superficie=getattr(b, 'superficie', 'terra'),
             livello=getattr(b, 'livello', 'intermedio'),
-            nota=getattr(b, 'note', '') or ''
+            nota=getattr(b, 'note', getattr(b, 'nota', '')) or ''
         ) for b in palline_db
     ]
 
-    # 🔥 Profilo giocatore
+    problema = dati.problema_fisico.lower()
+    obiettivo = dati.obiettivo.lower()
+
     player = PlayerProfile(
         level=dati.livello.lower(),
         style=dati.stile.lower(),
         surface=dati.superficie.lower(),
-        has_elbow_issues=(dati.problema_fisico.lower() == "gomito"),
-        has_shoulder_issues=(dati.problema_fisico.lower() == "spalla"),
-        has_wrist_issues=(dati.problema_fisico.lower() == "polso"),
-        prefers_spin=(dati.obiettivo.lower() == "spin"),
-        prefers_power=(dati.obiettivo.lower() == "potenza"),
-        prefers_control=(dati.obiettivo.lower() == "controllo")
+        has_elbow_issues=(problema == "gomito"),
+        has_shoulder_issues=(problema == "spalla"),
+        has_wrist_issues=(problema == "polso"),
+        prefers_spin=(obiettivo == "spin"),
+        prefers_power=(obiettivo == "potenza"),
+        prefers_control=(obiettivo == "controllo")
     )
 
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
-    try:
-        from services.email import invia_email_consulenza
-        if hasattr(dati, 'email') and dati.email:
-            invia_email_consulenza(
-                nome=dati.nome,
-                email=dati.email,
-                setup=risposta.get("setup", {}),
-                score=risposta.get("profilo", {}).get("score_profilo", 0),
-                spiegazione=risposta.get("spiegazione_aceai", "")
-            )
-    except Exception as e:
-        print(f"Errore invio email consulenza: {str(e)}")
-    return risposta
     
+    if dati.email and dati.email.strip():
+        background_tasks.add_task(esegui_invio_email, dati.nome, dati.email, risposta)
+
+    return risposta
+ 
