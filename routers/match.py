@@ -16,6 +16,7 @@ class MatchRequest(BaseModel):
     superficie: str
     problema_fisico: str
     obiettivo: str
+    email: str = ""
     model_config = {"from_attributes": True}
 
 @router.post("/consulenza")
@@ -81,3 +82,4 @@ def consulenza_match(dati: MatchRequest):
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
     return risposta
+    
