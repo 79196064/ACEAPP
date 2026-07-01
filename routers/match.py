@@ -81,5 +81,17 @@ def consulenza_match(dati: MatchRequest):
 
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
+    try:
+        from services.email import invia_email_consulenza
+        if hasattr(dati, 'email') and dati.email:
+            invia_email_consulenza(
+                nome=dati.nome,
+                email=dati.email,
+                setup=risposta.get("setup", {}),
+                score=risposta.get("profilo", {}).get("score_profilo", 0),
+                spiegazione=risposta.get("spiegazione_aceai", "")
+            )
+    except Exception as e:
+        print(f"Errore invio email consulenza: {str(e)}")
     return risposta
     
