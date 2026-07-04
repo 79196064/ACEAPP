@@ -248,11 +248,22 @@ def genera_consulenza(player: PlayerProfile,
     """Funzione principale dell'algoritmo ACEAI."""
     
     # 1. Selezione dei prodotti migliori basata sui punteggi
-    best_racquet = max(racquets, key=lambda r: score_racquet_for_player(player, r)) if racquets else None
+       racquets_sicure = racquets
+    if player.has_elbow_issues or player.has_shoulder_issues:
+        racquets_filtrate = [r for r in racquets if r.stiffness_ra <= 68]
+        if racquets_filtrate:
+            racquets_sicure = racquets_filtrate
+
+    best_racquet = max(racquets_sicure, key=lambda r: score_racquet_for_player(player, r)) if racquets_sicure else None
     racquet_score = score_racquet_for_player(player, best_racquet) if best_racquet else 0
     
-    best_string = max(strings, key=lambda s: score_string_for_player(player, s)) if strings else None
-    string_score = score_string_for_player(player, best_string) if best_string else 0
+    strings_sicure = strings
+    if player.has_elbow_issues or player.has_shoulder_issues or (player.age and player.age > 55):
+        strings_filtrate = [s for s in strings if s.material != "poly"]
+        if strings_filtrate:
+            strings_sicure = strings_filtrate
+
+    best_string = max(strings_sicure, key=lambda s: score_string_for_player(player, s)) if strings_sicure else None
     
     tension = calculate_tension(player)
     ball = recommend_ball(player, balls)
