@@ -62,3 +62,24 @@ app.include_router(utenti_router.router)
 @app.get("/")
 def root():
     return {"message": "ACEAPP API is running!"}
+
+@app.get("/health")
+def health_check():
+    from database_models import SessionLocal
+    from models.racchette import Racchetta
+    try:
+        db = SessionLocal()
+        count = db.query(Racchetta).count()
+        db.close()
+        return {
+            "status": "ok",
+            "database": "connesso",
+            "racchette_disponibili": count,
+            "servizio": "ACEAPP Backend"
+        }
+    except Exception as e:
+        return {
+            "status": "errore",
+            "database": "non connesso",
+            "dettaglio": str(e)
+        }
