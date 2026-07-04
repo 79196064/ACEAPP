@@ -231,13 +231,13 @@ def generate_ai_explanation(player: PlayerProfile, context: Dict[str, Any]) -> s
         msg += f"Abbinata alla corda **{context['string_name']}** ({context['tension_main']}/{context['tension_cross']} kg) esalta al massimo il tuo gioco da fondo campo."
         
     return msg
-
-
 def genera_consulenza(player: PlayerProfile,
                       racquets: List[Racquet],
                       strings: List[StringItem],
+                      balls: List[BallItem] = None,
                       shoes: List[ShoeItem] = None,
                       outfits: List[OutfitItem] = None) -> Dict[str, Any]:
+
 
     """Funzione principale dell'algoritmo ACEAI."""
     
