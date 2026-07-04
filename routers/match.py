@@ -1,98 +1,67 @@
 ﻿import os
-import logging
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
-from database_models import SessionLocal
-from models.racchette import Racchetta
-from models.corde import Corda
-from models.palline import Pallina
-from models.scarpe import Scarpa  
-from models.outfit import Outfit  # 🟢 Importo il tuo modello dell'abbigliamento esistente
-from services.aceai import (
-    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem, ShoeItem, OutfitItem
-)
+from services.aceai import genera_consulenza, PlayerProfile
+from services.aceai import Racquet, StringItem, BallItem
 
-logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
-# Modello dati allineato al 100% con il Frontend di Lovable.dev
 class MatchRequest(BaseModel):
     nome: str
     livello: str
     stile: str
     superficie: str
-    problema_fisico: str  
-    # Campi biometrici estratti dalle schermate
-    eta: Optional[int] = None              
-    peso: Optional[int] = None             
-    altezza: Optional[int] = None          
-    genere: Optional[str] = None           
-    sesso: Optional[str] = None            
-    citta: Optional[str] = None            
-    taglia_tshirt: Optional[str] = None    
-    taglia_pantaloncini: Optional[str] = None
-    numero_scarpe: Optional[int] = None    
-    colore_preferito: Optional[str] = None 
-    # Obiettivo ed email
+    problema_fisico: str
     obiettivo: str
-    email: str = ""
-    
     model_config = {"from_attributes": True}
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def esegui_invio_email(dati_nome: str, dati_email: str, risposta: dict):
-    try:
-        from services.email import invia_email_consulenza
-        invia_email_consulenza(
-            nome=dati_nome,
-            email=dati_email,
-            setup=risposta.get("setup", {}),
-            score=risposta.get("profilo", {}).get("score_profilo", 0),
-            spiegazione=risposta.get("spiegazione_aceai", "")
-        )
-    except Exception as e:
-        logger.error(f"Errore invio email consulenza: {str(e)}")
-
 @router.post("/consulenza")
-async def consulenza_match(
-    dati: MatchRequest, 
-    background_tasks: BackgroundTasks, 
-    db: Session = Depends(get_db)
-):
-    # 1. Lettura tabelle dal Database (Aggiunta la query per l'outfit)
+def consulenza_match(dati: MatchRequest):
+    from models.racchette import Racchetta
+    from models.corde import Corda
+    from models.palline import Pallina
+    from database_models import SessionLocal
+
+
+    db = SessionLocal()
+
+    # 🔥 Lettura dati reali dal DB
     racchette_db = db.query(Racchetta).all()
     corde_db = db.query(Corda).all()
     palline_db = db.query(Pallina).all()
-    scarpe_db = db.query(Scarpa).all()  
-    outfit_db = db.query(Outfit).all()  # 🟢 Estrazione dei dati reali dell'outfit dal DB
+    db.close()
 
-    # 2. Conversione Database → Oggetti logici ACEAI
+    # 🔥 Conversione DB → ACEAI
+        def categorizza_racchetta(brand, modello):
+        testo = f"{brand} {modello}".lower()
+        if any(x in testo for x in ["pro staff", "prestige", "phantom", "speed pro"]):
+            return {"stiffness_ra": 62, "pattern": "18x20", "profile_mm": 21.0, "weight_g": 315}
+        elif any(x in testo for x in ["pure aero", "gravity", "extreme"]):
+            return {"stiffness_ra": 68, "pattern": "16x19", "profile_mm": 24.0, "weight_g": 300}
+        elif any(x in testo for x in ["clash", "instinct", "radical"]):
+            return {"stiffness_ra": 58, "pattern": "16x19", "profile_mm": 26.0, "weight_g": 285}
+        elif any(x in testo for x in ["junior", "team", "boost", "recreational"]):
+            return {"stiffness_ra": 72, "pattern": "16x19", "profile_mm": 25.0, "weight_g": 270}
+        else:
+            return {"stiffness_ra": 65, "pattern": "16x19", "profile_mm": 23.0, "weight_g": 300}
+
     racquets = [
         Racquet(
-            brand=getattr(r, 'brand', 'Generic'),
-            model=getattr(r, 'modello', 'Generic'),
-            stiffness_ra=getattr(r, 'stiffness_ra', 65) or 65,
-            pattern=getattr(r, 'pattern', '16x19') or '16x19',
-            profile_mm=getattr(r, 'profile_mm', 23.0) or 23.0,
-            weight_g=getattr(r, 'weight_g', getattr(r, 'peso', 300)) or 300
+            brand=r.brand,
+            model=r.modello,
+            **categorizza_racchetta(r.brand, r.modello)
         ) for r in racchette_db
     ]
 
     strings = [
         StringItem(
-            name=f"{c.brand} {getattr(c, 'model', getattr(c, 'modello', ''))}".strip() if hasattr(c, 'brand') else "Generic",
+            name=f"{c.brand} {c.model}" if hasattr(c, 'model') else str(c.brand),
             material=getattr(c, 'materiale', 'poly') or 'poly',
-            is_shaped=getattr(c, 'is_shaped', getattr(c, 'sagomata', False)) or False,
-            stiffness_score=getattr(c, 'stiffness_score', getattr(c, 'rigidezza', 60)) or 60
+            is_shaped=False,
+            stiffness_score=60
         ) for c in corde_db
     ]
 
@@ -102,71 +71,23 @@ async def consulenza_match(
             modello=getattr(b, 'modello', 'US Open'),
             superficie=getattr(b, 'superficie', 'terra'),
             livello=getattr(b, 'livello', 'intermedio'),
-            nota=getattr(b, 'note', getattr(b, 'nota', '')) or ''
+            nota=getattr(b, 'note', '') or ''
         ) for b in palline_db
     ]
 
-    shoes = [
-        ShoeItem(
-            brand=getattr(s, 'brand', 'Asics'),
-            modello=getattr(s, 'modello', 'Gel-Resolution'),
-            superficie=getattr(s, 'superficie', 'all court'),
-            livello=getattr(s, 'livello', 'intermedio'),
-            nota=getattr(s, 'nota', getattr(s, 'note', '')) or ''
-        ) for s in scarpe_db
-    ]
-
-    # 🟢 Mappatura dell'outfit per l'algoritmo
-    outfits = [
-        OutfitItem(
-            brand=getattr(o, 'brand', 'Nike'),
-            modello=getattr(o, 'modello', 'Dri-FIT'),
-            categoria=getattr(o, 'categoria', 't-shirt'),
-            genere=getattr(o, 'genere', 'uomo').lower(),
-            colore=getattr(o, 'colore', 'bianco'),
-            nota=getattr(o, 'nota', getattr(o, 'note', '')) or ''
-        ) for o in outfit_db
-    ]
-
-    # 3. Normalizzazione delle risposte
-    problema = dati.problema_fisico.lower() if dati.problema_fisico else ""
-    obiettivo = dati.obiettivo.lower() if dati.obiettivo else ""
-
-    ha_problemi_gomito = (
-        "gomito" in problema or 
-        "si" in problema or 
-        "epicondilite" in problema or 
-        "occasionalmente" in problema
-    )
-
+    # 🔥 Profilo giocatore
     player = PlayerProfile(
-        level=dati.livello.lower() if dati.livello else "intermedio",
-        style=dati.stile.lower() if dati.stile else "tutto campo",
-        surface=dati.superficie.lower() if dati.superficie else "terra",
-        has_elbow_issues=ha_problemi_gomito,
-        has_shoulder_issues=("spalla" in problema),
-        has_wrist_issues=("polso" in problema),
-        prefers_spin=("spin" in obiettivo),
-        prefers_power=("potenza" in obiettivo),
-        prefers_control=("controllo" in obiettivo),
-        preferred_color=dati.colore_preferito,
-        # Assegnazione dei parametri biologici e taglie reali
-        age=dati.eta,
-        weight=dati.peso,
-        height=dati.altezza,
-        gender=dati.genere.lower() if dati.genere else None,
-        numero_scarpe=dati.numero_scarpe
+        level=dati.livello.lower(),
+        style=dati.stile.lower(),
+        surface=dati.superficie.lower(),
+        has_elbow_issues=(dati.problema_fisico.lower() == "gomito"),
+        has_shoulder_issues=(dati.problema_fisico.lower() == "spalla"),
+        has_wrist_issues=(dati.problema_fisico.lower() == "polso"),
+        prefers_spin=(dati.obiettivo.lower() == "spin"),
+        prefers_power=(dati.obiettivo.lower() == "potenza"),
+        prefers_control=(dati.obiettivo.lower() == "controllo")
     )
-    # Iniettiamo le stringhe delle taglie per l'outfit dentro l'oggetto player in modalità dinamica
-    setattr(player, 'taglia_tshirt', dati.taglia_tshirt)
-    setattr(player, 'taglia_pantaloncini', dati.taglia_pantaloncini)
 
-    # 4. Generazione consulenza estesa con scarpe e outfit!
-    risposta = genera_consulenza(player, racquets, strings, balls, shoes, outfits)
-    risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
-    
-    # 5. Spedizione mail in background
-    if dati.email and dati.email.strip():
-        background_tasks.add_task(esegui_invio_email, dati.nome, dati.email, risposta)
-
+     = genera_consulenza(player, racquets, strings, balls)
+    risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzatarisposta."
     return risposta
