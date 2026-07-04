@@ -7,7 +7,6 @@ from services.aceai import Racquet, StringItem, BallItem
 
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
-
 class MatchRequest(BaseModel):
     nome: str
     livello: str
@@ -16,8 +15,11 @@ class MatchRequest(BaseModel):
     problema_fisico: str
     obiettivo: str
     email: str = ""
+    altezza: int = 0
+    peso: int = 0
+    eta: int = 0
+    genere: str = ""
     model_config = {"from_attributes": True}
-
 
 def categorizza_racchetta(brand, modello):
     testo = f"{brand} {modello}".lower()
@@ -73,7 +75,7 @@ def consulenza_match(dati: MatchRequest):
         ) for b in palline_db
     ]
 
-    player = PlayerProfile(
+     player = PlayerProfile(
         level=dati.livello.lower(),
         style=dati.stile.lower(),
         surface=dati.superficie.lower(),
@@ -82,8 +84,12 @@ def consulenza_match(dati: MatchRequest):
         has_wrist_issues=(dati.problema_fisico.lower() == "polso"),
         prefers_spin=(dati.obiettivo.lower() == "spin"),
         prefers_power=(dati.obiettivo.lower() == "potenza"),
-        prefers_control=(dati.obiettivo.lower() == "controllo")
-    )
+        prefers_control=(dati.obiettivo.lower() == "controllo"),
+        age=dati.eta if dati.eta > 0 else None,
+        weight=dati.peso if dati.peso > 0 else None,
+        height=dati.altezza if dati.altezza > 0 else None,
+        gender=dati.genere.lower() if dati.genere else None
+    )   
 
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."

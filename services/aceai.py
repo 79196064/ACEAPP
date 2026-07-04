@@ -83,6 +83,12 @@ def score_racquet_for_player(player: PlayerProfile, racquet: Racquet) -> float:
             score -= 25.0
         elif racquet.weight_g <= 290:
             score += 15.0
+    # REGOLA BIOMETRICA SULL'ALTEZZA (Leva e maneggevolezza)
+    if player.height:
+        if player.height > 185 and racquet.profile_mm <= 22:
+            score += 10.0
+        elif player.height < 165 and racquet.weight_g <= 285:
+            score += 10.0
             
     # REGOLA BIOMETRICA SULL'ETÀ (Protegge le articolazioni)
     if player.age and player.age > 50:
