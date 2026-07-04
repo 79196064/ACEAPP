@@ -1,4 +1,4 @@
-import os
+﻿import os
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
 
@@ -14,6 +14,12 @@ class PlayerProfile:
     prefers_control: bool = False
     surface: str = "cemento"
     preferred_color: Optional[str] = None
+    
+    # 🟢 NUOVI CAMPI BIOMETRICI AGGIUNTI DA LOVABLE:
+    age: Optional[int] = None
+    weight: Optional[int] = None
+    height: Optional[int] = None
+    gender: Optional[str] = None
 
 @dataclass
 class Racquet:
@@ -26,6 +32,7 @@ class Racquet:
 
 @dataclass
 class StringItem:
+
     name: str
     material: str
     is_shaped: bool
@@ -72,6 +79,20 @@ def score_racquet_for_player(player: PlayerProfile, racquet: Racquet) -> float:
         score += 5
     if player.surface == "erba" and racquet.weight_g >= 300:
         score += 5
+        # 🟢 REGOLA BIOMETRICA SUL PESO DELL'UTENTE (Previene affaticamento)
+    if player.weight and player.weight < 68:
+        if racquet.weight_g > 300:
+            score -= 25.0
+        elif racquet.weight_g <= 290:
+            score += 15.0
+            
+    # 🟢 REGOLA BIOMETRICA SULL'ETÀ (Protegge le articolazioni)
+    if player.age and player.age > 50:
+        if racquet.stiffness_ra > 66:
+            score -= 20.0
+        elif racquet.stiffness_ra < 63:
+            score += 15.0
+
     return max(0.0, min(100.0, score))
 
 def score_string_for_player(player: PlayerProfile, string: StringItem) -> float:
@@ -93,6 +114,15 @@ def score_string_for_player(player: PlayerProfile, string: StringItem) -> float:
     if player.level == "beginner":
         if string.material == "synthetic gut": score += 10
         if string.stiffness_score > 70: score -= 10
+        # 🟢 SE L'UTENTE È OVER 45 O HA PROBLEMI AL GOMITO/BRACCIO
+    if (player.age and player.age > 45) or player.has_elbow_issues:
+        # Penalizziamo duramente il monofilamento ("poly") che è rigido
+        if string.material == "poly":
+            score -= 30.0
+        # Incentiviamo materiali morbidi come multifilamento o synthetic gut
+        elif string.material in ("multi", "synthetic gut"):
+            score += 25.0
+   
     return max(0.0, min(100.0, score))
 
 def recommend_ball(player: PlayerProfile, balls: List[BallItem]) -> Optional[Dict]:
