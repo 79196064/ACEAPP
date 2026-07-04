@@ -1,6 +1,9 @@
 ﻿import os
+import logging
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, field
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class PlayerProfile:
@@ -15,11 +18,12 @@ class PlayerProfile:
     surface: str = "cemento"
     preferred_color: Optional[str] = None
     
-    # 🟢 NUOVI CAMPI BIOMETRICI AGGIUNTI DA LOVABLE:
+    # Parametri biometrici per Lovable.dev
     age: Optional[int] = None
     weight: Optional[int] = None
     height: Optional[int] = None
     gender: Optional[str] = None
+    numero_scarpe: Optional[int] = None
 
 @dataclass
 class Racquet:
@@ -32,11 +36,10 @@ class Racquet:
 
 @dataclass
 class StringItem:
-
     name: str
     material: str
-    is_shaped: bool
-    stiffness_score: int
+    is_shaped: bool = False
+    stiffness_score: int = 60
 
 @dataclass
 class BallItem:
@@ -44,49 +47,44 @@ class BallItem:
     modello: str
     superficie: str
     livello: str
-    nota: str
+    nota: Optional[str] = ""
+
+@dataclass
+class ShoeItem:
+    brand: str
+    modello: str
+    superficie: str
+    livello: str
+    nota: Optional[str] = ""
+
 
 def score_racquet_for_player(player: PlayerProfile, racquet: Racquet) -> float:
-    score = 50.0
-    if player.has_elbow_issues:
-        score += -25 if racquet.stiffness_ra > 68 else 15
-    if player.has_shoulder_issues:
-        score += -20 if racquet.weight_g > 305 else 10
-    if player.has_wrist_issues:
-        if racquet.weight_g > 310:
-            score -= 15
-    if player.style == "attaccante":
-        if racquet.profile_mm >= 23: score += 12
-        if racquet.weight_g >= 300: score += 8
-    elif player.style == "arrotino":
-        if racquet.pattern == "16x19": score += 15
-        if racquet.profile_mm <= 24: score += 8
-    elif player.style == "difensore":
-        if racquet.weight_g >= 295: score += 10
-        if racquet.stiffness_ra <= 65: score += 8
-    if player.prefers_control and racquet.pattern == "18x20":
-        score += 10
-    if player.prefers_power and racquet.profile_mm >= 24:
-        score += 10
-    if player.prefers_spin and racquet.pattern == "16x19":
-        score += 10
-    if player.level == "beginner":
-        if racquet.weight_g > 305: score -= 10
-        if racquet.stiffness_ra > 70: score -= 10
-    elif player.level == "advanced":
-        if racquet.weight_g < 290: score -= 8
-    if player.surface == "terra" and racquet.pattern == "16x19":
-        score += 5
-    if player.surface == "erba" and racquet.weight_g >= 300:
-        score += 5
-        # 🟢 REGOLA BIOMETRICA SUL PESO DELL'UTENTE (Previene affaticamento)
+    """Assegna un punteggio alla racchetta in base allo stile e ai dati biologici del giocatore."""
+    score = 50.0  # Punteggio base
+
+    # Logiche basate sullo stile di gioco
+    if player.style == "aggressivo":
+        if racquet.weight_g >= 300: score += 15
+        if racquet.stiffness_ra >= 65: score += 10
+    elif player.style == "difensivo":
+        if racquet.weight_g < 300: score += 15
+        if racquet.profile_mm >= 24: score += 10
+    elif player.style == "tutto campo":
+        if 295 <= racquet.weight_g <= 305: score += 15
+
+    # Logiche basate sull'obiettivo
+    if player.prefers_control and racquet.profile_mm <= 22: score += 15
+    if player.prefers_power and racquet.stiffness_ra >= 67: score += 15
+    if player.prefers_spin and "16x" in racquet.pattern: score += 15
+
+    # REGOLA BIOMETRICA SUL PESO DELL'UTNETE (Previene affaticamento)
     if player.weight and player.weight < 68:
         if racquet.weight_g > 300:
             score -= 25.0
         elif racquet.weight_g <= 290:
             score += 15.0
             
-    # 🟢 REGOLA BIOMETRICA SULL'ETÀ (Protegge le articolazioni)
+    # REGOLA BIOMETRICA SULL'ETÀ (Protegge le articolazioni)
     if player.age and player.age > 50:
         if racquet.stiffness_ra > 66:
             score -= 20.0
@@ -95,133 +93,140 @@ def score_racquet_for_player(player: PlayerProfile, racquet: Racquet) -> float:
 
     return max(0.0, min(100.0, score))
 
+
 def score_string_for_player(player: PlayerProfile, string: StringItem) -> float:
+    """Assegna un punteggio alla corda in base alle caratteristiche e alla salute del braccio."""
     score = 50.0
-    if player.has_elbow_issues or player.has_shoulder_issues:
-        if string.material == "poly":
-            score -= 20
-        elif string.material in ("multi", "synthetic gut"):
-            score += 20
-    if player.prefers_spin:
-        if string.is_shaped: score += 15
-        if string.material == "poly": score += 10
-    if player.prefers_power:
-        if string.material in ("multi", "synthetic gut"):
-            score += 12
-    if player.prefers_control:
-        if string.material == "poly": score += 10
-        if string.stiffness_score > 60: score += 5
-    if player.level == "beginner":
-        if string.material == "synthetic gut": score += 10
-        if string.stiffness_score > 70: score -= 10
-        # 🟢 SE L'UTENTE È OVER 45 O HA PROBLEMI AL GOMITO/BRACCIO
+
+    if player.prefers_spin and string.is_shaped: score += 20
+    if player.prefers_power and string.material == "nylon": score += 15
+    if player.prefers_control and string.material == "poly": score += 15
+
+    if string.stiffness_score > 70: score -= 10
+        
+    # SE L'UTENTE È OVER 45 O HA PROBLEMI AL GOMITO/BRACCIO
     if (player.age and player.age > 45) or player.has_elbow_issues:
-        # Penalizziamo duramente il monofilamento ("poly") che è rigido
         if string.material == "poly":
             score -= 30.0
-        # Incentiviamo materiali morbidi come multifilamento o synthetic gut
-        elif string.material in ("multi", "synthetic gut"):
+        elif string.material in ("multi", "synthetic gut", "gut", "nylon"):
             score += 25.0
-   
+
     return max(0.0, min(100.0, score))
 
-def recommend_ball(player: PlayerProfile, balls: List[BallItem]) -> Optional[Dict]:
-    livello_map = {"beginner": "principiante", "intermediate": "intermedio", "advanced": "avanzato"}
-    livello_it = livello_map.get(player.level, "intermedio")
-    filtered = [b for b in balls if b.superficie == player.surface and b.livello == livello_it]
-    if not filtered:
-        filtered = [b for b in balls if b.superficie == player.surface]
-    if not filtered and balls:
-        filtered = [balls[0]]
-    if filtered:
-        ball = filtered[0]
-        return {
-            "brand": ball.brand,
-            "modello": ball.modello,
-            "superficie": ball.superficie,
-            "livello": ball.livello,
-            "nota": ball.nota
-        }
-    return None
 
 def calculate_tension(player: PlayerProfile) -> Dict[str, int]:
-    base = {"beginner": 22, "intermediate": 23, "advanced": 24}
-    tension_main = base.get(player.level, 23)
-    tension_cross = tension_main - 1
-    if player.prefers_spin:
-        tension_main -= 1
-        tension_cross -= 1
-    if player.prefers_control:
-        tension_main += 1
-    if player.has_elbow_issues or player.has_shoulder_issues:
-        tension_main -= 1
-        tension_cross -= 1
-    if player.surface == "terra":
-        tension_main -= 1
+    """Calcola la tensione ottimale delle corde."""
+    base_tension = 23
+    if player.prefers_power: base_tension -= 1
+    if player.prefers_control: base_tension += 1
+    if player.has_elbow_issues: base_tension -= 1
+    return {"tension_main": base_tension, "tension_cross": base_tension - 1}
+
+
+def recommend_ball(player: PlayerProfile, balls: List[BallItem]) -> Dict[str, Any]:
+    """Seleziona la pallina più indicata per la superficie di gioco."""
+    if not balls:
+        return {"brand": "Wilson", "modello": "US Open", "superficie": "cemento", "livello": "avanzato"}
+    
+    for b in balls:
+        if player.surface == "terra" and "terra" in b.superficie.lower():
+            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota}
+        if player.surface != "terra" and "cemento" in b.superficie.lower():
+            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota}
+            
+    first = balls[0]
+    return {"brand": first.brand, "modello": first.modello, "superficie": first.superficie, "livello": first.livello, "nota": first.nota}
+
+
+def recommend_shoes(player: PlayerProfile, shoes: List[ShoeItem]) -> Dict[str, Any]:
+    """Seleziona la scarpa ideale in base al peso del tennista e alla superficie."""
+    if not shoes:
+        return {}
+
+    best_shoe = None
+    best_score = -999.0
+
+    for s in shoes:
+        score = 50.0
+
+        if player.surface == "terra" and "clay" in s.superficie.lower():
+            score += 30.0
+        elif player.surface != "terra" and "all court" in s.superficie.lower():
+            score += 30.0
+
+        if player.weight and player.weight > 80:
+            if "resolution" in s.modello.lower() or "barricade" in s.modello.lower():
+                score += 20.0
+        elif player.weight and player.weight < 70:
+            if "speed" in s.modello.lower() or "ubersonic" in s.modello.lower():
+                score += 20.0
+
+        if score > best_score:
+            best_score = score
+            best_shoe = s
+
+    if not best_shoe:
+        return {}
+
     return {
-        "tension_main": max(18, tension_main),
-        "tension_cross": max(17, tension_cross),
+        "brand": best_shoe.brand,
+        "modello": best_shoe.modello,
+        "superficie": best_shoe.superficie,
+        "nota": best_shoe.nota
     }
 
-def generate_ai_explanation(player: PlayerProfile, combo: Dict[str, Any]) -> str:
-    ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-    if not ANTHROPIC_API_KEY:
-        return combo.get("reason_template", "Setup consigliato da ACEAI.")
-    try:
-        import anthropic
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        prompt = f"""Sei ACEAI, il consulente tecnico di tennis di ACEAPP.
-Genera una spiegazione personale, tecnica e motivante per questo setup consigliato.
 
-Profilo giocatore:
-- Livello: {player.level}
-- Stile: {player.style}
-- Problemi fisici: gomito={'si' if player.has_elbow_issues else 'no'}, spalla={'si' if player.has_shoulder_issues else 'no'}, polso={'si' if player.has_wrist_issues else 'no'}
-- Preferenze: spin={'si' if player.prefers_spin else 'no'}, potenza={'si' if player.prefers_power else 'no'}, controllo={'si' if player.prefers_control else 'no'}
-- Superficie: {player.surface}
+def generate_ai_explanation(player: PlayerProfile, context: Dict[str, Any]) -> str:
+    """Genera l'analisi testuale personalizzata firmata ACEAI."""
+    msg = f"# 🎾 Analisi ACEAI per il tuo Setup\n\n---\n\n"
+    msg += f"La **{context['racquet_brand']} {context['racquet_model']}** offre un rendimento ottimale per il livello {player.level}. "
+    
+    if player.has_elbow_issues or (player.age and player.age > 45):
+        msg += f"Considerando i problemi al braccio o l'età, abbiamo configurato la corda **{context['string_name']}** ad una tensione protettiva di {context['tension_main']}/{context['tension_cross']} kg per ridurre le vibrazioni nocive."
+    else:
+        msg += f"Abbinata alla corda **{context['string_name']}** ({context['tension_main']}/{context['tension_cross']} kg) esalta al massimo il tuo gioco da fondo campo."
+        
+    return msg
 
-Setup consigliato:
-- Racchetta: {combo['racquet_brand']} {combo['racquet_model']} (score: {combo['racquet_score']:.1f}/100)
-- Corda: {combo['string_name']} (score: {combo['string_score']:.1f}/100)
-- Tensione: {combo['tension_main']} kg verticali / {combo['tension_cross']} kg orizzontali
-- Pallina: {combo.get('pallina', {}).get('brand', 'N/A')} {combo.get('pallina', {}).get('modello', '')}
-- Score totale: {combo['total_score']:.1f}/100
-
-Scrivi una spiegazione in italiano di 3-4 frasi, tecnica ma comprensibile."""
-        message = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=300,
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return message.content[0].text
-    except Exception as e:
-        return combo.get("reason_template", f"Setup ottimizzato per il tuo stile di gioco ({e}).")
 
 def genera_consulenza(player: PlayerProfile,
                       racquets: List[Racquet],
                       strings: List[StringItem],
-                      balls: List[BallItem]) -> Dict[str, Any]:
-    best_racquet = max(racquets, key=lambda r: score_racquet_for_player(player, r))
-    racquet_score = score_racquet_for_player(player, best_racquet)
-    best_string = max(strings, key=lambda s: score_string_for_player(player, s))
-    string_score = score_string_for_player(player, best_string)
+                      balls: List[BallItem],
+                      shoes: List[ShoeItem] = None) -> Dict[str, Any]:
+    """Funzione principale dell'algoritmo ACEAI."""
+    
+    # 1. Selezione dei prodotti migliori basata sui punteggi
+    best_racquet = max(racquets, key=lambda r: score_racquet_for_player(player, r)) if racquets else None
+    racquet_score = score_racquet_for_player(player, best_racquet) if best_racquet else 0
+    
+    best_string = max(strings, key=lambda s: score_string_for_player(player, s)) if strings else None
+    string_score = score_string_for_player(player, best_string) if best_string else 0
+    
     tension = calculate_tension(player)
     ball = recommend_ball(player, balls)
+    
+    # 2. Selezione della scarpa ideale
+    best_shoe = recommend_shoes(player, shoes) if shoes else {}
+    if best_shoe:
+        best_shoe["numero_consigliato"] = getattr(player, 'numero_scarpe', None) or "Taglia non specificata"
+
+    # 3. Costruzione del setup finale
     setup = {
         "racchetta": {
-            "brand": best_racquet.brand,
-            "modello": best_racquet.model,
-            "peso": best_racquet.weight_g,
-            "bilanciamento": best_racquet.profile_mm,
-            "schema_corde": best_racquet.pattern,
-            "rigidita": best_racquet.stiffness_ra
+            "brand": best_racquet.brand if best_racquet else "Generic",
+            "modello": best_racquet.model if best_racquet else "Generic",
+            "peso": best_racquet.weight_g if best_racquet else 300,
+            "bilanciamento": best_racquet.profile_mm if best_racquet else 23.0,
+            "schema_corde": best_racquet.pattern if best_racquet else "16x19",
+            "rigidita": best_racquet.stiffness_ra if best_racquet else 65
         },
         "corde": {
-            "nome": best_string.name,
-            "materiale": best_string.material,
+            "nome": best_string.name if best_string else "Generic",
+            "materiale": best_string.material if best_string else "poly",
             "calibro": None,
-            "is_shaped": best_string.is_shaped,
-            "stiffness_score": best_string.stiffness_score
+            "is_shaped": best_string.is_shaped if best_string else False,
+            "stiffness_score": best_string.stiffness_score if best_string else 60
         },
         "tensione": {
             "verticali": tension["tension_main"],
@@ -231,22 +236,20 @@ def genera_consulenza(player: PlayerProfile,
         "palline": ball,
         "grip": {},
         "antivibro": {},
-        "scarpe": {},
+        "scarpe": best_shoe,
         "outfit": {}
     }
+    
     total_score = (racquet_score + string_score) / 2
+    
     explanation = generate_ai_explanation(player, {
-        "racquet_brand": best_racquet.brand,
-        "racquet_model": best_racquet.model,
-        "racquet_score": racquet_score,
-        "string_name": best_string.name,
-        "string_score": string_score,
+        "racquet_brand": best_racquet.brand if best_racquet else "Generic",
+        "racquet_model": best_racquet.model if best_racquet else "Generic",
+        "string_name": best_string.name if best_string else "Generic",
         "tension_main": tension["tension_main"],
-        "tension_cross": tension["tension_cross"],
-        "pallina": ball,
-        "total_score": total_score,
-        "reason_template": "Setup ottimizzato per il tuo stile di gioco."
+        "tension_cross": tension["tension_cross"]
     })
+    
     return {
         "profilo": {
             "livello": player.level,
@@ -260,5 +263,5 @@ def genera_consulenza(player: PlayerProfile,
         "priorita": [],
         "warning": [],
         "spiegazione_aceai": explanation,
-        "messaggio": explanation
+        "messaggio": f"Ciao! Ecco la tua consulenza personalizzata."
     }

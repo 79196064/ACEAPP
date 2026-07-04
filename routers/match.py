@@ -9,34 +9,35 @@ from database_models import SessionLocal
 from models.racchette import Racchetta
 from models.corde import Corda
 from models.palline import Pallina
+from models.scarpe import Scarpa  # 🟢 Importo il tuo modello delle scarpe esistente
 from services.aceai import (
-    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem
+    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem, ShoeItem
 )
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
-# 🟢 Modello aggiornato con tutti i dati biometrici e le selezioni del Frontend di Lovable
+# Modello dati allineato al 100% con il Frontend di Lovable.dev
 class MatchRequest(BaseModel):
     nome: str
     livello: str
     stile: str
     superficie: str
-    problema_fisico: str  # Gestisce la selezione sul braccio/epicondilite
-    obiettivo: str
-    email: str = ""
-    
-    # Nuovi campi inseriti nelle schermate 1, 2 e 3
-    genere: Optional[str] = None           # Uomo / Donna / Bambino
-    sesso: Optional[str] = None            # Maschio / Femmina
-    altezza: Optional[int] = None          # es. 175
-    peso: Optional[int] = None             # es. 70
-    eta: Optional[int] = None              # es. 30
+    problema_fisico: str  
+    # Campi biometrici estratti dalle schermate
+    eta: Optional[int] = None              
+    peso: Optional[int] = None             
+    altezza: Optional[int] = None          
+    genere: Optional[str] = None           
+    sesso: Optional[str] = None            
     citta: Optional[str] = None            
     taglia_tshirt: Optional[str] = None    
     taglia_pantaloncini: Optional[str] = None
     numero_scarpe: Optional[int] = None    
     colore_preferito: Optional[str] = None 
+    # Obiettivo ed email
+    obiettivo: str
+    email: str = ""
     
     model_config = {"from_attributes": True}
 
@@ -66,12 +67,13 @@ async def consulenza_match(
     background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
-    # 1. Lettura tabelle DB
+    # 1. Lettura tabelle dal Database (Aggiunta la query per le scarpe)
     racchette_db = db.query(Racchetta).all()
     corde_db = db.query(Corda).all()
     palline_db = db.query(Pallina).all()
+    scarpe_db = db.query(Scarpa).all()  # 🟢 Estrazione dei dati reali delle scarpe
 
-    # 2. Conversione DB → ACEAI
+    # 2. Conversione Database → Oggetti logici ACEAI
     racquets = [
         Racquet(
             brand=getattr(r, 'brand', 'Generic'),
@@ -102,11 +104,21 @@ async def consulenza_match(
         ) for b in palline_db
     ]
 
-    # 3. Normalizzazione difensiva delle risposte (Evita bug se cambiano le maiuscole)
+    # 🟢 Mappatura delle scarpe per l'algoritmo
+    shoes = [
+        ShoeItem(
+            brand=getattr(s, 'brand', 'Asics'),
+            modello=getattr(s, 'modello', 'Gel-Resolution'),
+            superficie=getattr(s, 'superficie', 'all court'),
+            livello=getattr(s, 'livello', 'intermedio'),
+            nota=getattr(s, 'nota', getattr(s, 'note', '')) or ''
+        ) for s in scarpe_db
+    ]
+
+    # 3. Normalizzazione difensiva delle risposte
     problema = dati.problema_fisico.lower() if dati.problema_fisico else ""
     obiettivo = dati.obiettivo.lower() if dati.obiettivo else ""
 
-    # Controllo intelligente per l'epicondilite/problema braccio
     ha_problemi_gomito = (
         "gomito" in problema or 
         "si" in problema or 
@@ -123,11 +135,18 @@ async def consulenza_match(
         has_wrist_issues=("polso" in problema),
         prefers_spin=("spin" in obiettivo),
         prefers_power=("potenza" in obiettivo),
-        prefers_control=("controllo" in obiettivo)
+        prefers_control=("controllo" in obiettivo),
+        preferred_color=dati.colore_preferito,
+        # Assegnazione dei parametri biologici reali
+        age=dati.eta,
+        weight=dati.peso,
+        height=dati.altezza,
+        gender=dati.genere.lower() if dati.genere else None,
+        numero_scarpe=dati.numero_scarpe
     )
 
-    # 4. Generazione consulenza
-    risposta = genera_consulenza(player, racquets, strings, balls)
+    # 4. Generazione consulenza estesa (ora passiamo anche la lista delle scarpe!)
+    risposta = genera_consulenza(player, racquets, strings, balls, shoes)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
     
     # 5. Spedizione mail in background
