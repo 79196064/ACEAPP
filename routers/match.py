@@ -7,6 +7,7 @@ from services.aceai import Racquet, StringItem, BallItem
 
 router = APIRouter(prefix="/match", tags=["ACEAI Match"])
 
+
 class MatchRequest(BaseModel):
     nome: str
     livello: str
@@ -20,18 +21,7 @@ class MatchRequest(BaseModel):
     eta: int = 0
     genere: str = ""
     model_config = {"from_attributes": True}
-def categorizza_corda(brand, modello):
-    testo = f"{brand} {modello}".lower()
-    if any(x in testo for x in ["rpm", "hurricane", "spin", "rough", "revolution"]):
-        return {"material": "poly", "is_shaped": True, "stiffness_score": 75}
-    elif any(x in testo for x in ["gut", "natural", "vs team"]):
-        return {"material": "gut", "is_shaped": False, "stiffness_score": 35}
-    elif any(x in testo for x in ["multi", "biophonix", "nrg", "xcel"]):
-        return {"material": "multi", "is_shaped": False, "stiffness_score": 45}
-    elif any(x in testo for x in ["synthetic", "nylon", "prince"]):
-        return {"material": "synthetic gut", "is_shaped": False, "stiffness_score": 50}
-    else:
-        return {"material": "poly", "is_shaped": False, "stiffness_score": 60}
+
 
 def categorizza_racchetta(brand, modello):
     testo = f"{brand} {modello}".lower()
@@ -45,6 +35,20 @@ def categorizza_racchetta(brand, modello):
         return {"stiffness_ra": 72, "pattern": "16x19", "profile_mm": 25.0, "weight_g": 270}
     else:
         return {"stiffness_ra": 65, "pattern": "16x19", "profile_mm": 23.0, "weight_g": 300}
+
+
+def categorizza_corda(brand, modello):
+    testo = f"{brand} {modello}".lower()
+    if any(x in testo for x in ["rpm", "hurricane", "spin", "rough", "revolution"]):
+        return {"material": "poly", "is_shaped": True, "stiffness_score": 75}
+    elif any(x in testo for x in ["gut", "natural", "vs team"]):
+        return {"material": "gut", "is_shaped": False, "stiffness_score": 35}
+    elif any(x in testo for x in ["multi", "biophonix", "nrg", "xcel"]):
+        return {"material": "multi", "is_shaped": False, "stiffness_score": 45}
+    elif any(x in testo for x in ["synthetic", "nylon", "prince"]):
+        return {"material": "synthetic gut", "is_shaped": False, "stiffness_score": 50}
+    else:
+        return {"material": "poly", "is_shaped": False, "stiffness_score": 60}
 
 
 @router.post("/consulenza")
@@ -68,7 +72,7 @@ def consulenza_match(dati: MatchRequest):
         ) for r in racchette_db
     ]
 
-        strings = [
+    strings = [
         StringItem(
             name=f"{c.brand} {c.model}" if hasattr(c, 'model') else str(c.brand),
             **categorizza_corda(c.brand, getattr(c, 'model', ''))
@@ -85,7 +89,7 @@ def consulenza_match(dati: MatchRequest):
         ) for b in palline_db
     ]
 
-     player = PlayerProfile(
+    player = PlayerProfile(
         level=dati.livello.lower(),
         style=dati.stile.lower(),
         surface=dati.superficie.lower(),
@@ -99,7 +103,7 @@ def consulenza_match(dati: MatchRequest):
         weight=dati.peso if dati.peso > 0 else None,
         height=dati.altezza if dati.altezza > 0 else None,
         gender=dati.genere.lower() if dati.genere else None
-    )   
+    )
 
     risposta = genera_consulenza(player, racquets, strings, balls)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
