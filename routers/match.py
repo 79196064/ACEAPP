@@ -20,6 +20,18 @@ class MatchRequest(BaseModel):
     eta: int = 0
     genere: str = ""
     model_config = {"from_attributes": True}
+def categorizza_corda(brand, modello):
+    testo = f"{brand} {modello}".lower()
+    if any(x in testo for x in ["rpm", "hurricane", "spin", "rough", "revolution"]):
+        return {"material": "poly", "is_shaped": True, "stiffness_score": 75}
+    elif any(x in testo for x in ["gut", "natural", "vs team"]):
+        return {"material": "gut", "is_shaped": False, "stiffness_score": 35}
+    elif any(x in testo for x in ["multi", "biophonix", "nrg", "xcel"]):
+        return {"material": "multi", "is_shaped": False, "stiffness_score": 45}
+    elif any(x in testo for x in ["synthetic", "nylon", "prince"]):
+        return {"material": "synthetic gut", "is_shaped": False, "stiffness_score": 50}
+    else:
+        return {"material": "poly", "is_shaped": False, "stiffness_score": 60}
 
 def categorizza_racchetta(brand, modello):
     testo = f"{brand} {modello}".lower()
@@ -56,12 +68,10 @@ def consulenza_match(dati: MatchRequest):
         ) for r in racchette_db
     ]
 
-    strings = [
+        strings = [
         StringItem(
             name=f"{c.brand} {c.model}" if hasattr(c, 'model') else str(c.brand),
-            material=getattr(c, 'materiale', 'poly') or 'poly',
-            is_shaped=False,
-            stiffness_score=60
+            **categorizza_corda(c.brand, getattr(c, 'model', ''))
         ) for c in corde_db
     ]
 
