@@ -174,6 +174,50 @@ def recommend_shoes(player: PlayerProfile, shoes: List[ShoeItem]) -> Dict[str, A
         "superficie": best_shoe.superficie,
         "nota": best_shoe.nota
     }
+@dataclass
+class OutfitItem:
+    brand: str
+    modello: str
+    categoria: str  # es: "t-shirt", "pantaloncini", "gonna"
+    genere: str     # es: "uomo", "donna"
+    colore: str
+    nota: Optional[str] = ""
+
+def recommend_outfit(player: PlayerProfile, outfits: List[OutfitItem]) -> Dict[str, Any]:
+    """Seleziona l'abbigliamento ideale in base al genere e al colore preferito."""
+    if not outfits:
+        return {"tshirt": {}, "bottom": {}}
+
+    best_tshirt = None
+    best_bottom = None
+    
+    # Filtro T-Shirt per genere
+    tshirts = [o for o in outfits if o.categoria.lower() == "t-shirt" and (not player.gender or o.genere.lower() == player.gender)]
+    if tshirts:
+        preferred = [t for t in tshirts if player.preferred_color and player.preferred_color.lower() in t.colore.lower()]
+        best_tshirt = preferred[0] if preferred else tshirts[0]
+
+    # Filtro Pantaloncini/Gonna per genere
+    bottom_cat = "gonna" if player.gender == "donna" else "pantaloncini"
+    bottoms = [o for o in outfits if o.categoria.lower() in (bottom_cat, "pantaloncini", "gonna") and (not player.gender or o.genere.lower() == player.gender)]
+    if bottoms:
+        preferred = [b for b in bottoms if player.preferred_color and player.preferred_color.lower() in b.colore.lower()]
+        best_bottom = preferred[0] if preferred else bottoms[0]
+
+    return {
+        "tshirt": {
+            "brand": best_tshirt.brand,
+            "modello": best_tshirt.modello,
+            "colore": best_tshirt.colore,
+            "taglia_consigliata": getattr(player, 'taglia_tshirt', None) or "Non specificata"
+        } if best_tshirt else {},
+        "bottom": {
+            "brand": best_bottom.brand,
+            "modello": best_bottom.modello,
+            "colore": best_bottom.colore,
+            "taglia_consigliata": getattr(player, 'taglia_pantaloncini', None) or "Non specificata"
+        } if best_bottom else {}
+    }
 
 
 def generate_ai_explanation(player: PlayerProfile, context: Dict[str, Any]) -> str:
@@ -192,8 +236,9 @@ def generate_ai_explanation(player: PlayerProfile, context: Dict[str, Any]) -> s
 def genera_consulenza(player: PlayerProfile,
                       racquets: List[Racquet],
                       strings: List[StringItem],
-                      balls: List[BallItem],
-                      shoes: List[ShoeItem] = None) -> Dict[str, Any]:
+                      shoes: List[ShoeItem] = None,
+                      outfits: List[OutfitItem] = None) -> Dict[str, Any]:
+
     """Funzione principale dell'algoritmo ACEAI."""
     
     # 1. Selezione dei prodotti migliori basata sui punteggi
@@ -206,6 +251,9 @@ def genera_consulenza(player: PlayerProfile,
     tension = calculate_tension(player)
     ball = recommend_ball(player, balls)
     
+        # Calcolo dell'outfit ideale
+    best_outfit = recommend_outfit(player, outfits) if outfits else {"tshirt": {}, "bottom": {}}
+
     # 2. Selezione della scarpa ideale
     best_shoe = recommend_shoes(player, shoes) if shoes else {}
     if best_shoe:
@@ -237,7 +285,8 @@ def genera_consulenza(player: PlayerProfile,
         "grip": {},
         "antivibro": {},
         "scarpe": best_shoe,
-        "outfit": {}
+        "outfit": best_outfit,
+
     }
     
     total_score = (racquet_score + string_score) / 2

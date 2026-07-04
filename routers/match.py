@@ -9,9 +9,10 @@ from database_models import SessionLocal
 from models.racchette import Racchetta
 from models.corde import Corda
 from models.palline import Pallina
-from models.scarpe import Scarpa  # 🟢 Importo il tuo modello delle scarpe esistente
+from models.scarpe import Scarpa  
+from models.outfit import Outfit  # 🟢 Importo il tuo modello dell'abbigliamento esistente
 from services.aceai import (
-    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem, ShoeItem
+    genera_consulenza, PlayerProfile, Racquet, StringItem, BallItem, ShoeItem, OutfitItem
 )
 
 logger = logging.getLogger(__name__)
@@ -67,11 +68,12 @@ async def consulenza_match(
     background_tasks: BackgroundTasks, 
     db: Session = Depends(get_db)
 ):
-    # 1. Lettura tabelle dal Database (Aggiunta la query per le scarpe)
+    # 1. Lettura tabelle dal Database (Aggiunta la query per l'outfit)
     racchette_db = db.query(Racchetta).all()
     corde_db = db.query(Corda).all()
     palline_db = db.query(Pallina).all()
-    scarpe_db = db.query(Scarpa).all()  # 🟢 Estrazione dei dati reali delle scarpe
+    scarpe_db = db.query(Scarpa).all()  
+    outfit_db = db.query(Outfit).all()  # 🟢 Estrazione dei dati reali dell'outfit dal DB
 
     # 2. Conversione Database → Oggetti logici ACEAI
     racquets = [
@@ -104,7 +106,6 @@ async def consulenza_match(
         ) for b in palline_db
     ]
 
-    # 🟢 Mappatura delle scarpe per l'algoritmo
     shoes = [
         ShoeItem(
             brand=getattr(s, 'brand', 'Asics'),
@@ -115,7 +116,19 @@ async def consulenza_match(
         ) for s in scarpe_db
     ]
 
-    # 3. Normalizzazione difensiva delle risposte
+    # 🟢 Mappatura dell'outfit per l'algoritmo
+    outfits = [
+        OutfitItem(
+            brand=getattr(o, 'brand', 'Nike'),
+            modello=getattr(o, 'modello', 'Dri-FIT'),
+            categoria=getattr(o, 'categoria', 't-shirt'),
+            genere=getattr(o, 'genere', 'uomo').lower(),
+            colore=getattr(o, 'colore', 'bianco'),
+            nota=getattr(o, 'nota', getattr(o, 'note', '')) or ''
+        ) for o in outfit_db
+    ]
+
+    # 3. Normalizzazione delle risposte
     problema = dati.problema_fisico.lower() if dati.problema_fisico else ""
     obiettivo = dati.obiettivo.lower() if dati.obiettivo else ""
 
@@ -137,16 +150,19 @@ async def consulenza_match(
         prefers_power=("potenza" in obiettivo),
         prefers_control=("controllo" in obiettivo),
         preferred_color=dati.colore_preferito,
-        # Assegnazione dei parametri biologici reali
+        # Assegnazione dei parametri biologici e taglie reali
         age=dati.eta,
         weight=dati.peso,
         height=dati.altezza,
         gender=dati.genere.lower() if dati.genere else None,
         numero_scarpe=dati.numero_scarpe
     )
+    # Iniettiamo le stringhe delle taglie per l'outfit dentro l'oggetto player in modalità dinamica
+    setattr(player, 'taglia_tshirt', dati.taglia_tshirt)
+    setattr(player, 'taglia_pantaloncini', dati.taglia_pantaloncini)
 
-    # 4. Generazione consulenza estesa (ora passiamo anche la lista delle scarpe!)
-    risposta = genera_consulenza(player, racquets, strings, balls, shoes)
+    # 4. Generazione consulenza estesa con scarpe e outfit!
+    risposta = genera_consulenza(player, racquets, strings, balls, shoes, outfits)
     risposta["messaggio"] = f"Ciao {dati.nome}! Ecco la tua consulenza personalizzata."
     
     # 5. Spedizione mail in background
