@@ -248,12 +248,11 @@ def genera_consulenza(player: PlayerProfile,
     """Funzione principale dell'algoritmo ACEAI."""
     
     # 1. Selezione dei prodotti migliori basata sui punteggi
-       racquets_sicure = racquets
+    racquets_sicure = racquets
     if player.has_elbow_issues or player.has_shoulder_issues:
         racquets_filtrate = [r for r in racquets if r.stiffness_ra <= 68]
         if racquets_filtrate:
             racquets_sicure = racquets_filtrate
-
     best_racquet = max(racquets_sicure, key=lambda r: score_racquet_for_player(player, r)) if racquets_sicure else None
     racquet_score = score_racquet_for_player(player, best_racquet) if best_racquet else 0
     
