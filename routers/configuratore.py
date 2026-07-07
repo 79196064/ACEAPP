@@ -1,4 +1,8 @@
-﻿@router.post("/genera")
+﻿from fastapi import APIRouter
+
+router = APIRouter()
+
+@router.post("/genera")
 def genera_configurazione(dati: ConfigurazioneRequest, db: Session = Depends(get_db)):
     # 1. Cerca l'attrezzatura reale nel database
     racchetta_db = db.query(Racchetta).filter(
