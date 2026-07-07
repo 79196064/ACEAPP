@@ -1,4 +1,6 @@
 ﻿from fastapi import APIRouter, Depends
+# Importiamo get_db per permettere la connessione al database
+from database import get_db 
 
 router = APIRouter()
 
