@@ -1,9 +1,21 @@
 ﻿from fastapi import APIRouter, Depends
-# Importiamo get_db per permettere la connessione al database
+from sqlalchemy.orm import Session
+
+# 1. CORREGGI IL PERCORSO DI DATABASE (es. se è dentro una cartella 'app' o 'db')
+# Se è nella cartella principale lascia "from database import get_db"
 from database import get_db 
+
+# 2. IMPORTA I MODELLI DEL DATABASE (Racchetta e Corda)
+# (Cambia 'models' se il tuo file si chiama in un altro modo)
+from models import Racchetta, Corda 
+
+# 3. IMPORTA IL SCHEMA PYDANTIC (ConfigurazioneRequest)
+# (Cambia 'schemas' se il tuo file si chiama in un altro modo, o se è nello stesso models)
+from schemas import ConfigurazioneRequest 
 
 router = APIRouter()
 
+# Da qui in poi il tuo codice continua esattamente come prima:
 @router.post("/genera")
 def genera_configurazione(dati: ConfigurazioneRequest, db: Session = Depends(get_db)):
     # 1. Cerca l'attrezzatura reale nel database
@@ -14,7 +26,7 @@ def genera_configurazione(dati: ConfigurazioneRequest, db: Session = Depends(get
 
     corda_db = db.query(Corda).filter(
         Corda.brand == dati.corda_brand,
-        Corda.model == dati.corda_modello
+        Corda.model == dati.corda_modello # <-- Completa la riga qui
     ).first()
 
     # Fallback di sicurezza
