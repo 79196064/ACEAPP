@@ -143,3 +143,13 @@ class NegozioSchema(BaseModel):
     model_config = {
         "from_attributes": True
     }
+class ConfigurazioneRequest(BaseModel):
+    racchetta_brand: str
+    racchetta_modello: str
+    corda_brand: str
+    corda_modello: str
+    colore_grip: str = "nero"
+    colore_corda: str = "naturale"
+    antivibro: str = "nessuno"
+    livello: str
+    stile: str

@@ -68,14 +68,27 @@ def consulenza_match(dati: MatchRequest):
         Racquet(
             brand=r.brand,
             model=r.modello,
-            **categorizza_racchetta(r.brand, r.modello)
+            stiffness_ra=r.rigidita or 65,
+            pattern=r.schema_corde or "16x19",
+            profile_mm=23.0,
+            weight_g=r.peso or 300,
+            image_url=r.image_url or "",
+            livello=r.livello or "",
+            stile=r.stile or "",
+            superficie=r.superficie or ""
         ) for r in racchette_db
     ]
 
     strings = [
         StringItem(
-            name=f"{c.brand} {c.model}" if hasattr(c, 'model') else str(c.brand),
-            **categorizza_corda(c.brand, getattr(c, 'model', ''))
+            name=f"{c.brand} {c.model}" if getattr(c, 'model', None) else str(c.brand),
+            material=c.materiale or "poly",
+            is_shaped=bool(c.forma_sezione and c.forma_sezione.lower() != "rotonda"),
+            stiffness_score=int(c.rigidita_statica) if c.rigidita_statica else 60,
+            image_url=c.image_url or "",
+            rigidita_statica=c.rigidita_statica or 0.0,
+            tensione_min_kg=c.tensione_min_kg or 0.0,
+            tensione_max_kg=c.tensione_max_kg or 0.0
         ) for c in corde_db
     ]
 
