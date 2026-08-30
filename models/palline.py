@@ -13,3 +13,4 @@ class Pallina(Base):
     confezione = Column(String, nullable=True)
     prezzo = Column(String, nullable=True)
     nota = Column(String, nullable=True)
+    image_url = Column(String, nullable=True)

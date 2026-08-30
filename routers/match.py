@@ -98,7 +98,8 @@ def consulenza_match(dati: MatchRequest):
             modello=getattr(b, 'modello', 'US Open'),
             superficie=getattr(b, 'superficie', 'terra'),
             livello=getattr(b, 'livello', 'intermedio'),
-            nota=getattr(b, 'note', '') or ''
+            nota=getattr(b, 'note', '') or '',
+            image_url=getattr(b, 'image_url', '') or ''
         ) for b in palline_db
     ]
 

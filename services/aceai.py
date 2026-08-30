@@ -114,6 +114,8 @@ class BallItem:
 
     nota: Optional[str] = ""
 
+    image_url: str = ""
+
 
 
 @dataclass
@@ -282,7 +284,7 @@ def recommend_ball(player: PlayerProfile, balls: List[BallItem]) -> Dict[str, An
 
     if not balls:
 
-        return {"brand": "Wilson", "modello": "US Open", "superficie": "cemento", "livello": "avanzato"}
+        return {"brand": "Wilson", "modello": "US Open", "superficie": "cemento", "livello": "avanzato", "immagine": ""}
 
     
 
@@ -290,11 +292,11 @@ def recommend_ball(player: PlayerProfile, balls: List[BallItem]) -> Dict[str, An
 
         if player.surface == "terra" and "terra" in b.superficie.lower():
 
-            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota}
+            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota, "immagine": b.image_url}
 
         if player.surface != "terra" and "cemento" in b.superficie.lower():
 
-            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota}
+            return {"brand": b.brand, "modello": b.modello, "superficie": b.superficie, "livello": b.livello, "nota": b.nota, "immagine": b.image_url}
 
             
 
